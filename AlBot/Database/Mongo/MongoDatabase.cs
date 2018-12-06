@@ -35,7 +35,7 @@ namespace AlBot.Database.Mongo
             }
         }
 
-        public MongoDatabase()
+        static MongoDatabase()
         {
             MongoDB.Bson.Serialization.BsonClassMap.RegisterClassMap<ModelBase>( cm =>
             {

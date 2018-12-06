@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,10 +8,11 @@ namespace AlBot.Models
     public abstract class ModelBase
     {
         [MongoDB.Bson.Serialization.Attributes.BsonId]
+        [BsonIgnoreIfDefault]
         public string Id
         {
             get;
-            protected set;
+            set;
         }
 
         public string CreatedBy
@@ -60,6 +62,7 @@ namespace AlBot.Models
 
         private DateTime _createDateTime;
         [MongoDB.Bson.Serialization.Attributes.BsonDateTimeOptions( Kind = DateTimeKind.Utc )]
+        [BsonIgnoreIfDefault]
         public DateTime CreatedDateTime
         {
             get
@@ -68,7 +71,7 @@ namespace AlBot.Models
             }
             set
             {
-                _createDateTime = value.Kind == DateTimeKind.Unspecified || value.Kind == DateTimeKind.Utc ? value.ToLocalTime() : value;
+                _createDateTime = value.Kind == DateTimeKind.Unspecified || value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : value;
             }
         }
 

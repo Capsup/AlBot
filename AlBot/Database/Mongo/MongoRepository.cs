@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,7 +26,7 @@ namespace AlBot.Database.Mongo
 
         }
 
-        private IQueryable<T> _query
+        private IEnumerable<T> _query
         {
             get
             {
@@ -99,32 +100,34 @@ namespace AlBot.Database.Mongo
             await collection.InsertManyAsync( items );
         }
 
-        public T Replace( T item )
+        public T Replace( T item, bool upsert = false )
         {
             item.ModifiedDateTime = DateTime.UtcNow;
-            return collection.FindOneAndReplace( x => x.Id == item.Id, item );
+            return collection.FindOneAndReplace<T>( x => x.Id == item.Id, item, options: new FindOneAndReplaceOptions<T>() { ReturnDocument = ReturnDocument.After, IsUpsert = upsert } );
         }
 
-        public async Task<T> ReplaceAsync( T item )
+        public async Task<T> ReplaceAsync( T item, Expression<Func<T, bool>> customPrimaryKeyPredicate = null, bool upsert = false )
         {
             item.ModifiedDateTime = DateTime.UtcNow;
-            return await collection.FindOneAndReplaceAsync( x => x.Id == item.Id, item );
+            if( customPrimaryKeyPredicate == null )
+                customPrimaryKeyPredicate = (x => x.Id == item.Id);
+            return await collection.FindOneAndReplaceAsync<T>( customPrimaryKeyPredicate, item, options: new FindOneAndReplaceOptions<T>() { ReturnDocument = ReturnDocument.After, IsUpsert = upsert } );
         }
 
-        public void ReplaceMany( T[] items )
+        public void ReplaceMany( T[] items, bool upsert = false )
         {
             foreach( var item in items )
             {
-                this.Replace( item );
+                this.Replace( item, upsert );
             }
         }
 
-        public async Task ReplaceManyAsync( T[] items )
+        public async Task ReplaceManyAsync( T[] items, bool upsert = false )
         {
-            await items.ForEachAsync( async x => await this.ReplaceAsync( x ) );
+            await items.ForEachAsync( async x => await this.ReplaceAsync( x, null, upsert ) );
         }
 
-        public IQueryable<T> Query()
+        public IEnumerable<T> Query()
         {
             return this._query;
         }

@@ -8,10 +8,6 @@ namespace AlBot.Modules
 {
     public class GeneralModule : ModuleBase<SocketCommandContext>
     {
-        [Command( "help" )]
-        public async Task HelpAsync()
-        {
-            await ReplyAsync( "You asked for help! I don't have any, LUL!" );
-        }
+        
     }
 }

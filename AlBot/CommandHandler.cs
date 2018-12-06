@@ -2,8 +2,10 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,9 +45,22 @@ namespace AlBot
             var context = new SocketCommandContext( _discord, message );
             var result = await _commands.ExecuteAsync( context, argPos, _services );
 
-            if( result.Error.HasValue &&
-                result.Error.Value != CommandError.UnknownCommand ) // it's bad practice to send 'unknown command' errors
-                await context.Channel.SendMessageAsync( result.ToString() );
+            if( result.Error.HasValue )
+            {
+                switch( result.Error )
+                {
+                    case CommandError.UnknownCommand:
+                        await context.Channel.SendMessageAsync( $"Sorry {MentionUtils.MentionUser( context.User.Id )}, but I don't understand that command. Type '{MentionUtils.MentionUser( context.Client.CurrentUser.Id )} help' to get an overview of available commands." );
+                        break;
+                    case CommandError.BadArgCount:
+                        await context.Channel.SendMessageAsync( $"Sorry {MentionUtils.MentionUser( context.User.Id )}, but that parameter count does not match the command. Type '{MentionUtils.MentionUser( context.Client.CurrentUser.Id )} help' to get an overview of available commands." );
+                        break;
+                    /*default:
+                        await context.Channel.SendMessageAsync( $"Sorry {MentionUtils.MentionUser( context.User.Id )}, but an internal error occured. Blame Capsup or something ;)" );
+                        Program.Services.GetRequiredService<ILogger<CommandHandler>>().LogError( result.Error.ToString() );
+                        break;*/
+                }
+            }
         }
     }
 }
